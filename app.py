@@ -16,7 +16,7 @@ class Message(db.Model):
     message = db.Column(db.String)
     subject = db.Column(db.String)
     creation_date= db.Column(db.String)
-    read = db.Column(db.Boolean, unique=False, default=False)
+    read = db.Column(db.Boolean,unique=False , default=False)
 
 @app.route("/newMsg", methods=['POST'])
 #new message
@@ -29,38 +29,39 @@ def new_msg():
                     message=msg['message'], 
                     subject=msg['subject'],
                     creation_date=datetime.datetime.today(),
-                    read=True
+                    # read=True
                     )
         db.session.add(newmsg)
         db.session.commit()
         return 'success'
 
-@app.route("/all_msgs/<user>")
+@app.route("/all_msgs/<user>", methods=['POST'])
 #find all messages of a certin user
 def all_msgs_user(user=""):
     return [{"id":msg.id,
             "sender":msg.sender,
             "message":msg.message,
+            "receiver":msg.receiver,
             "subject":msg.subject,
             "creation_date":msg.creation_date, 
             "read":msg.read}
     for msg in db.session.query(Message).filter((Message.sender==user)|(Message.receiver==user)).all() 
     if request.method=="POST"]
 
-@app.route("/all_unread_msgs/<user>")
+@app.route("/all_unread_msgs/<user>", methods=['POST'])
 #find all unread messages of a certin user
 def all_un_msgs_user(user=""):
-    return [{
-            "id":msg.id,
+    return [{"id":msg.id,
             "sender":msg.sender,
             "message":msg.message,
-            "subject":msg.subject,
             "receiver":msg.receiver,
+            "subject":msg.subject,
             "creation_date":msg.creation_date, 
             "read":msg.read}
-        for msg in db.session.query(Message).filter((Message.sender==user)|(Message.receiver==user),Message.read==False)]
+    for msg in db.session.query(Message).filter((Message.sender==user)|(Message.receiver==user), Message.read==False)
+    if request.method=="POST"]
 
-@app.route("/return_msg/")
+@app.route("/return_msg/", methods=['POST'])
 #returns all messages that contain a search phrase of users choice
 def return_msg():
         info=request.json
@@ -72,7 +73,8 @@ def return_msg():
             "receiver":msg.receiver,
             "creation_date":msg.creation_date, 
             "read":msg.read}
-            for msg in db.session.query(Message).filter(((Message.sender==info["user"])|(Message.receiver==info["user"])),Message.message.ilike(f"%{info['search_phrase']}%")).all()]
+            for msg in db.session.query(Message).filter(((Message.sender==info["user"])|(Message.receiver==info["user"])),Message.message.ilike(f"%{info['search_phrase']}%")).all()
+            if request.method == 'POST']
         return res
 
 
@@ -80,6 +82,7 @@ def return_msg():
 @app.route("/del_msg/", methods=['DELETE'])
 #allows removal of a message if user is sender
 def del_msg():
+    #     if request.method=="POST"]
     info=request.json
     msg_to_del=Message.query.get(info['id'])
     if msg_to_del.sender==info['user']:
