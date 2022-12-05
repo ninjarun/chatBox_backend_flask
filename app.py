@@ -16,14 +16,15 @@ class Message(db.Model):
     message = db.Column(db.String)
     subject = db.Column(db.String)
     creation_date= db.Column(db.String)
-    read = db.Column(db.Boolean,unique=False , default=False)
+    read = db.Column(db.Boolean, default=False)
 
-    def __init__(self,sender,reciever,message,subject,creation_date,read):
+    def __init__(self,sender,receiver,message,subject,creation_date,read):
         self.sender=sender
-        self.receiver=reciever
+        self.receiver=receiver
         self.message=message
         self.subject=subject
         self.creation_date=creation_date
+        self.read=read
 
 @app.route("/newMsg", methods=['POST'])
 def new_msg():
@@ -38,7 +39,7 @@ def new_msg():
                     message=msg['message'],
                     subject=msg['subject'],
                     creation_date=datetime.datetime.today(),
-                    # read=True
+                    read=False
                     )
         db.session.add(newmsg)
         db.session.commit()
